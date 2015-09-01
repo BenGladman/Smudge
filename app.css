@@ -1,0 +1,42 @@
+﻿body {
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.smudge-container {
+    position: relative;
+}
+
+.smudge-img {
+    left: 0;
+    position: absolute;
+    top: 0;
+}
+
+.smudge-canvas {
+    left: 0;
+    opacity: 1;
+    position: absolute;
+    top: 0;
+    transition: opacity ease 1s;
+}
+
+.smudge-canvas:hover {
+    opacity: 0;
+}
+
+.smudge-info {
+    background-color: rgba(255,255,255,0.5);
+    bottom: 0;
+    box-sizing: border-box;    
+    left: 0;
+    opacity: 0;
+    padding: 5px 10px;
+    position: absolute;
+    transition: opacity ease 1s;
+    width: 100%;
+    word-wrap: break-word;
+}
+
+.smudge-info:hover {
+    opacity: 1;
+}
