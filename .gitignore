@@ -1,0 +1,5 @@
+﻿*.suo
+*.user
+.vs
+Smudge/bin
+Smudge/obj
