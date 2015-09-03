@@ -81,23 +81,21 @@ class Smudge {
         this.width = element.scrollWidth;
         this.height = element.scrollHeight;
 
+        let src = element.dataset["src"];
+        if (src) {
+            let image = new Image(this.width,this.height);
+            image.src = src;
+            image.className = "smudge-img";
+            element.appendChild(image);
+            this.image = image;
+        }
+
         let canvas = document.createElement("canvas");
         canvas.width = this.width;
         canvas.height = this.height;
         canvas.className = "smudge-canvas";
 
         element.appendChild(canvas);
-
-        let src = element.dataset["src"];
-        if (src) {
-            let image = document.createElement("img");
-            image.width = this.width;
-            image.height = this.height;
-            image.src = src;
-            image.className = "smudge-img";
-            element.appendChild(image);
-            this.image = image;
-        }
 
         this.ctx = canvas.getContext("2d");
 
@@ -109,6 +107,10 @@ class Smudge {
     }
 
     draw(): Smudge {
+        if (!this.data) {
+            return this;
+        }
+
         let previewData = this.data;
         let previewWidth = previewData.width;
         let previewHeight = previewData.height;
@@ -130,6 +132,12 @@ class Smudge {
     }
 
     generate(ssize: number): Smudge {
+        if (!this.image.complete) {
+            this.info("Image is not yet fully loaded.");
+            this.image.onload = () => this.info("Image is now fully loaded.");
+            return this;
+        }
+
         let swidth = Math.max(1, Math.floor(Math.sqrt(ssize * this.width / this.height)));
         let sheight = Math.max(1, Math.round(swidth * this.height / this.width));
         let sdata = new SmudgeData(swidth);
@@ -170,9 +178,9 @@ class Smudge {
         return [(r / count), (g / count), (b / count)];
     }
 
-    get sbase64() { return this.data.base64; }
-    get swidth() { return this.data.width; }
-    get sheight() { return this.data.height; }
+    get sbase64() { return this.data ? this.data.base64 : ""; }
+    get swidth() { return this.data ? this.data.width : 0; }
+    get sheight() { return this.data ? this.data.height : 0; }
 
     info(text?: string): Smudge {
         var infoDiv = <HTMLDivElement> this.element.getElementsByClassName("smudge-info")[0];
@@ -183,7 +191,7 @@ class Smudge {
         }
         if (text) {
             infoDiv.innerText = text;
-        } else {
+        } else if (this.data) {
             infoDiv.innerText = `width=${this.swidth}, height=${this.sheight}, length=${this.sbase64.length}, base64=${this.sbase64}`;
         }
         return this;
@@ -200,7 +208,13 @@ class Smudge {
             sliderControl.value = "0";
             sliderControl.oninput = () => { this.generate(Number(sliderControl.value)).draw().info(); };
             this.element.appendChild(sliderControl);
-            this.info("Slide right to generate a smudge");
+
+            if (this.image.complete) {
+                this.info("Slide right to generate a smudge");
+            } else {
+                this.info("Wait for the image to load, then slide right to generate a smudge");
+                this.image.onload = () => { this.info("Slide right to generate a smudge"); }
+            }
         }
         return this;
     }

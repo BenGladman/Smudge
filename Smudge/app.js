@@ -88,21 +88,19 @@ var Smudge = (function () {
         element.className = "smudge-container";
         this.width = element.scrollWidth;
         this.height = element.scrollHeight;
-        var canvas = document.createElement("canvas");
-        canvas.width = this.width;
-        canvas.height = this.height;
-        canvas.className = "smudge-canvas";
-        element.appendChild(canvas);
         var src = element.dataset["src"];
         if (src) {
-            var image = document.createElement("img");
-            image.width = this.width;
-            image.height = this.height;
+            var image = new Image(this.width, this.height);
             image.src = src;
             image.className = "smudge-img";
             element.appendChild(image);
             this.image = image;
         }
+        var canvas = document.createElement("canvas");
+        canvas.width = this.width;
+        canvas.height = this.height;
+        canvas.className = "smudge-canvas";
+        element.appendChild(canvas);
         this.ctx = canvas.getContext("2d");
         var previewBase64 = element.dataset["preview"];
         if (previewBase64) {
@@ -111,6 +109,9 @@ var Smudge = (function () {
         }
     }
     Smudge.prototype.draw = function () {
+        if (!this.data) {
+            return this;
+        }
         var previewData = this.data;
         var previewWidth = previewData.width;
         var previewHeight = previewData.height;
@@ -129,6 +130,12 @@ var Smudge = (function () {
         return this;
     };
     Smudge.prototype.generate = function (ssize) {
+        var _this = this;
+        if (!this.image.complete) {
+            this.info("Image is not yet fully loaded.");
+            this.image.onload = function () { return _this.info("Image is now fully loaded."); };
+            return this;
+        }
         var swidth = Math.max(1, Math.floor(Math.sqrt(ssize * this.width / this.height)));
         var sheight = Math.max(1, Math.round(swidth * this.height / this.width));
         var sdata = new SmudgeData(swidth);
@@ -162,17 +169,17 @@ var Smudge = (function () {
         return [(r / count), (g / count), (b / count)];
     };
     Object.defineProperty(Smudge.prototype, "sbase64", {
-        get: function () { return this.data.base64; },
+        get: function () { return this.data ? this.data.base64 : ""; },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(Smudge.prototype, "swidth", {
-        get: function () { return this.data.width; },
+        get: function () { return this.data ? this.data.width : 0; },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(Smudge.prototype, "sheight", {
-        get: function () { return this.data.height; },
+        get: function () { return this.data ? this.data.height : 0; },
         enumerable: true,
         configurable: true
     });
@@ -186,7 +193,7 @@ var Smudge = (function () {
         if (text) {
             infoDiv.innerText = text;
         }
-        else {
+        else if (this.data) {
             infoDiv.innerText = "width=" + this.swidth + ", height=" + this.sheight + ", length=" + this.sbase64.length + ", base64=" + this.sbase64;
         }
         return this;
@@ -203,7 +210,13 @@ var Smudge = (function () {
             sliderControl.value = "0";
             sliderControl.oninput = function () { _this.generate(Number(sliderControl.value)).draw().info(); };
             this.element.appendChild(sliderControl);
-            this.info("Slide right to generate a smudge");
+            if (this.image.complete) {
+                this.info("Slide right to generate a smudge");
+            }
+            else {
+                this.info("Wait for the image to load, then slide right to generate a smudge");
+                this.image.onload = function () { _this.info("Slide right to generate a smudge"); };
+            }
         }
         return this;
     };

@@ -9,15 +9,15 @@
 .smudge-img {
     left: 0;
     position: absolute;
-    top: 0;
-    transition: opacity ease 1s;
+    top: 0;    
 }
 
 .smudge-canvas {
     left: 0;
-    opacity: 1;
+    opacity: 0;
     position: absolute;
     top: 0;
+    transition: opacity ease 1s;
 }
 
 .smudge-info {
@@ -45,8 +45,8 @@
     width: 100%;
 }
 
-.smudge-container:hover .smudge-img {
-    opacity: 0;
+.smudge-container:hover .smudge-canvas {
+    opacity: 1;
 }
 
 .smudge-container:hover .smudge-info {
