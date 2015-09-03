@@ -81,6 +81,13 @@ class Smudge {
         this.width = element.scrollWidth;
         this.height = element.scrollHeight;
 
+        let canvas = document.createElement("canvas");
+        canvas.width = this.width;
+        canvas.height = this.height;
+        canvas.className = "smudge-canvas";
+
+        element.appendChild(canvas);
+
         let src = element.dataset["src"];
         if (src) {
             let image = document.createElement("img");
@@ -91,13 +98,6 @@ class Smudge {
             element.appendChild(image);
             this.image = image;
         }
-
-        let canvas = document.createElement("canvas");
-        canvas.width = this.width;
-        canvas.height = this.height;
-        canvas.className = "smudge-canvas";
-
-        element.appendChild(canvas);
 
         this.ctx = canvas.getContext("2d");
 
@@ -174,29 +174,41 @@ class Smudge {
     get swidth() { return this.data.width; }
     get sheight() { return this.data.height; }
 
-    private infoDiv: HTMLDivElement;
-
-    info(): Smudge {
-        if (!this.infoDiv) {
-            this.infoDiv = document.createElement("div");
-            this.infoDiv.className = "smudge-info";
-            this.element.appendChild(this.infoDiv);
+    info(text?: string): Smudge {
+        var infoDiv = <HTMLDivElement> this.element.getElementsByClassName("smudge-info")[0];
+        if (!infoDiv) {
+            infoDiv = document.createElement("div");
+            infoDiv.className = "smudge-info";
+            this.element.appendChild(infoDiv);
         }
-        this.infoDiv.innerText = `width=${this.swidth}, height=${this.sheight}, length=${this.sbase64.length}, base64=${this.sbase64}`;
+        if (text) {
+            infoDiv.innerText = text;
+        } else {
+            infoDiv.innerText = `width=${this.swidth}, height=${this.sheight}, length=${this.sbase64.length}, base64=${this.sbase64}`;
+        }
+        return this;
+    }
+
+    slider(): Smudge {
+        var sliderControl = <HTMLInputElement> this.element.getElementsByClassName("smudge-slider")[0];
+        if (!sliderControl) {
+            sliderControl = document.createElement("input");
+            sliderControl.className = "smudge-slider";
+            sliderControl.type = "range";
+            sliderControl.min = "1";
+            sliderControl.max = "500";
+            sliderControl.value = "0";
+            sliderControl.oninput = () => { this.generate(Number(sliderControl.value)).draw().info(); };
+            this.element.appendChild(sliderControl);
+            this.info("Slide right to generate a smudge");
+        }
         return this;
     }
 }
 
 window.onload = () => {
-    new Smudge("empty");
-    let bea = new Smudge("beach");
-    let ram = new Smudge("ram");
-    let tbl = new Smudge("table");
-    let yel = new Smudge("yellow");
-    window.setTimeout(() => {
-        bea.generate(50).draw().info();
-        ram.generate(50).draw().info();
-        tbl.generate(50).draw().info();
-        yel.generate(50).draw().info();
-    }, 1000);
+    new Smudge("beach").slider();
+    new Smudge("ram").slider();
+    new Smudge("table").slider();
+    new Smudge("yellow").slider();
 };
