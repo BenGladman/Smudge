@@ -88,6 +88,11 @@ var Smudge = (function () {
         element.className = "smudge-container";
         this.width = element.scrollWidth;
         this.height = element.scrollHeight;
+        var canvas = document.createElement("canvas");
+        canvas.width = this.width;
+        canvas.height = this.height;
+        canvas.className = "smudge-canvas";
+        element.appendChild(canvas);
         var src = element.dataset["src"];
         if (src) {
             var image = document.createElement("img");
@@ -98,11 +103,6 @@ var Smudge = (function () {
             element.appendChild(image);
             this.image = image;
         }
-        var canvas = document.createElement("canvas");
-        canvas.width = this.width;
-        canvas.height = this.height;
-        canvas.className = "smudge-canvas";
-        element.appendChild(canvas);
         this.ctx = canvas.getContext("2d");
         var previewBase64 = element.dataset["preview"];
         if (previewBase64) {
@@ -176,28 +176,43 @@ var Smudge = (function () {
         enumerable: true,
         configurable: true
     });
-    Smudge.prototype.info = function () {
-        if (!this.infoDiv) {
-            this.infoDiv = document.createElement("div");
-            this.infoDiv.className = "smudge-info";
-            this.element.appendChild(this.infoDiv);
+    Smudge.prototype.info = function (text) {
+        var infoDiv = this.element.getElementsByClassName("smudge-info")[0];
+        if (!infoDiv) {
+            infoDiv = document.createElement("div");
+            infoDiv.className = "smudge-info";
+            this.element.appendChild(infoDiv);
         }
-        this.infoDiv.innerText = "width=" + this.swidth + ", height=" + this.sheight + ", length=" + this.sbase64.length + ", base64=" + this.sbase64;
+        if (text) {
+            infoDiv.innerText = text;
+        }
+        else {
+            infoDiv.innerText = "width=" + this.swidth + ", height=" + this.sheight + ", length=" + this.sbase64.length + ", base64=" + this.sbase64;
+        }
+        return this;
+    };
+    Smudge.prototype.slider = function () {
+        var _this = this;
+        var sliderControl = this.element.getElementsByClassName("smudge-slider")[0];
+        if (!sliderControl) {
+            sliderControl = document.createElement("input");
+            sliderControl.className = "smudge-slider";
+            sliderControl.type = "range";
+            sliderControl.min = "1";
+            sliderControl.max = "500";
+            sliderControl.value = "0";
+            sliderControl.oninput = function () { _this.generate(Number(sliderControl.value)).draw().info(); };
+            this.element.appendChild(sliderControl);
+            this.info("Slide right to generate a smudge");
+        }
         return this;
     };
     return Smudge;
 })();
 window.onload = function () {
-    new Smudge("empty");
-    var bea = new Smudge("beach");
-    var ram = new Smudge("ram");
-    var tbl = new Smudge("table");
-    var yel = new Smudge("yellow");
-    window.setTimeout(function () {
-        bea.generate(50).draw().info();
-        ram.generate(50).draw().info();
-        tbl.generate(50).draw().info();
-        yel.generate(50).draw().info();
-    }, 1000);
+    new Smudge("beach").slider();
+    new Smudge("ram").slider();
+    new Smudge("table").slider();
+    new Smudge("yellow").slider();
 };
 //# sourceMappingURL=app.js.map
