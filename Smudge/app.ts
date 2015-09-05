@@ -9,6 +9,9 @@
         }
     }
 
+    /**
+     * Width of the smudge.
+     */
     get width(): number {
         if (this.data.length < 1) { return 1; }
         return this.data.charCodeAt(0) + 1;
@@ -20,15 +23,24 @@
         this.data = String.fromCharCode(value - 1) + this.data.substring(1);
     }
 
+    /**
+     * Height of the smudge.
+     */
     get height(): number {
         return Math.max(1, Math.ceil((this.data.length - 1) / this.width));
     }
 
-    valueAt(index: number): number {
+    /**
+     * Get the value at the index.
+     */
+    private valueAt(index: number): number {
         if (this.data.length <= (index + 1)) { return 0; }
         return this.data.charCodeAt(index + 1);;
     }
 
+    /**
+     * Get the colour at the index.
+     */
     rgbAt(index: number): [number, number, number] {
         let val = this.valueAt(index);
         let r = (7 & (val >> 5)) * 36;
@@ -37,6 +49,9 @@
         return [r, g, b];
     }
 
+    /**
+     * Append the colour as the next value.
+     */
     appendRgb(r: number, g: number, b: number) {
         if (this.data.length === 0) { this.data = "\0"; }
         let val = (r >> 5) << 5;
@@ -45,6 +60,9 @@
         this.data += String.fromCharCode(val);
     }
 
+    /**
+     * Base64 representation of the smudge.
+     */
     get base64(): string {
         return window.btoa(this.data);
     }
@@ -61,6 +79,7 @@ class Smudge {
     private element: HTMLElement;
     private image: HTMLImageElement;
     private data: SmudgeData;
+    private captionOnload: string;
 
     constructor(elementOrId: HTMLElement | string) {
         let element: HTMLElement;
@@ -76,18 +95,25 @@ class Smudge {
 
         this.element = element;
 
-        element.className = "smudge-container";
+        element.classList.add("smudge-container");
 
         this.width = element.scrollWidth;
         this.height = element.scrollHeight;
 
         let src = element.dataset["src"];
         if (src) {
-            let image = new Image(this.width,this.height);
+            element.classList.add("smudge-image-loading");
+
+            let image = new Image(this.width, this.height);
             image.src = src;
-            image.className = "smudge-img";
+            image.className = "smudge-image";
             element.appendChild(image);
             this.image = image;
+
+            image.onload = () => {
+                element.classList.remove("smudge-image-loading");
+                if (this.captionOnload) { this.caption(this.captionOnload); }
+            };
         }
 
         let canvas = document.createElement("canvas");
@@ -99,13 +125,16 @@ class Smudge {
 
         this.ctx = canvas.getContext("2d");
 
-        let previewBase64 = element.dataset["preview"];
-        if (previewBase64) {
-            this.data = new SmudgeData(previewBase64);
+        let b64 = element.dataset["smudge"];
+        if (b64) {
+            this.data = new SmudgeData(b64);
             this.draw();
         }
     }
 
+    /**
+     * Draw the smudge.
+     */
     draw(): Smudge {
         if (!this.data) {
             return this;
@@ -131,14 +160,26 @@ class Smudge {
         return this;
     }
 
-    generate(ssize: number): Smudge {
+    /**
+     * Calculate the smudge width for a given total size.
+     * @param ssize The total size of the smudge.
+     */
+    private calcWidthForSize(ssize: number): number {
+        return Math.sqrt(ssize * this.width / this.height);
+    }
+
+    /**
+     * Generate the smudge.
+     * @param swidth Width of the smudge.
+     */
+    generate(swidth: number): Smudge {
         if (!this.image.complete) {
-            this.info("Image is not yet fully loaded.");
-            this.image.onload = () => this.info("Image is now fully loaded.");
+            this.caption("Image is not yet fully loaded.");
+            this.captionOnload = "Image is now fully loaded.";
             return this;
         }
 
-        let swidth = Math.max(1, Math.floor(Math.sqrt(ssize * this.width / this.height)));
+        swidth = Math.max(1, Math.floor(swidth));
         let sheight = Math.max(1, Math.round(swidth * this.height / this.width));
         let sdata = new SmudgeData(swidth);
 
@@ -151,7 +192,7 @@ class Smudge {
         for (let sy = 0; sy < sheight; sy++) {
             for (let sx = 0; sx < swidth; sx++) {
                 let imageIndex = (Math.floor(sx * cellWidth) + (Math.floor(sy * cellHeight) * this.width)) * 4;
-                let [r, g, b] = this.getAverageColour(data, imageIndex, cellWidth, cellHeight);
+                let [r, g, b] = this.calcAverageColour(data, imageIndex, cellWidth, cellHeight);
                 sdata.appendRgb(r, g, b);
             }
         }
@@ -160,7 +201,14 @@ class Smudge {
         return this;
     }
 
-    private getAverageColour(data: number[], imageIndex1: number, cellWidth: number, cellHeight: number): [number, number, number] {
+    /**
+     * Calculate the average colour of a cell.
+     * @param data Pixel data.
+     * @param imageIndex1 Index in data of the first pixel in the cell.
+     * @param cellWidth Width of the cell in pixels.
+     * @param cellHeight Height of the cell in pixels.
+     */
+    private calcAverageColour(data: number[], imageIndex1: number, cellWidth: number, cellHeight: number): [number, number, number] {
         let r = 0, g = 0, b = 0, count = 0;
 
         for (let j = 0; j < cellHeight; j++) {
@@ -178,51 +226,102 @@ class Smudge {
         return [(r / count), (g / count), (b / count)];
     }
 
-    get sbase64() { return this.data ? this.data.base64 : ""; }
-    get swidth() { return this.data ? this.data.width : 0; }
-    get sheight() { return this.data ? this.data.height : 0; }
-
-    info(text?: string): Smudge {
-        var infoDiv = <HTMLDivElement> this.element.getElementsByClassName("smudge-info")[0];
-        if (!infoDiv) {
-            infoDiv = document.createElement("div");
-            infoDiv.className = "smudge-info";
-            this.element.appendChild(infoDiv);
-        }
+    /**
+     * Set the caption text.
+     * @param text Text on the caption.
+     */
+    caption(text?: string): Smudge {
+        let infoDiv = <HTMLDivElement> this.element.getElementsByClassName("smudge-caption")[0];
         if (text) {
+            if (!infoDiv) {
+                infoDiv = document.createElement("div");
+                infoDiv.className = "smudge-caption";
+                this.element.appendChild(infoDiv);
+            }
             infoDiv.innerText = text;
-        } else if (this.data) {
-            infoDiv.innerText = `width=${this.swidth}, height=${this.sheight}, length=${this.sbase64.length}, base64=${this.sbase64}`;
+        } else {
+            if (infoDiv) {
+                infoDiv.remove();
+            }
         }
+
         return this;
     }
 
-    slider(): Smudge {
-        var sliderControl = <HTMLInputElement> this.element.getElementsByClassName("smudge-slider")[0];
+    /**
+     * Base64 representation of the smudge.
+     */
+    get sbase64() { return this.data ? this.data.base64 : ""; }
+
+    /**
+     * Width of the smudge.
+     */
+    get swidth() { return this.data ? this.data.width : 0; }
+
+    /**
+     * Height of the smudge.
+     */
+    get sheight() { return this.data ? this.data.height : 0; }
+
+    toString(): string {
+        return `Smudge(width=${this.swidth}, height=${this.sheight}, length=${this.sbase64.length}, base64=${this.sbase64})`;
+    }
+
+    /**
+     * Add a slider control to allow the user the generate a smudge.
+     * @param min The minimum value of the slider.
+     * @param max The maximum value of the slider.
+     */
+    slider(min?: number, max?: number): Smudge {
+        let sliderControl = <HTMLInputElement> this.element.getElementsByClassName("smudge-slider")[0];
         if (!sliderControl) {
             sliderControl = document.createElement("input");
             sliderControl.className = "smudge-slider";
             sliderControl.type = "range";
-            sliderControl.min = "1";
-            sliderControl.max = "500";
-            sliderControl.value = "0";
-            sliderControl.oninput = () => { this.generate(Number(sliderControl.value)).draw().info(); };
+            sliderControl.step = "1";
+            sliderControl.title = "Slide to generate a smudge.";
             this.element.appendChild(sliderControl);
 
+            let oninput = () => {
+                let ssize = Number(sliderControl.value);
+                this.generate(ssize).draw();
+                if (this.data) { this.caption(this.toString()); }
+            };
+            sliderControl.oninput = oninput;
+
             if (this.image.complete) {
-                this.info("Slide right to generate a smudge");
+                this.caption("Slide to generate a smudge.");
             } else {
-                this.info("Wait for the image to load, then slide right to generate a smudge");
-                this.image.onload = () => { this.info("Slide right to generate a smudge"); }
+                this.caption("Wait for the image to load, then slide .to generate a smudge.");
+                this.captionOnload = "Slide to generate a smudge.";
             }
         }
+
+        sliderControl.min = min ? min.toString() : "1";
+        sliderControl.max = max ? max.toString() : "10";
+        sliderControl.value = this.swidth.toString();
+
+        return this;
+    }
+
+    /**
+     * Set what happens when the pointer hovers over the smudge.
+     * @param showSmudgeOnHover Show the smudge image on hover.
+     * @param showCaptionOnHover Show the caption and slider on hover.
+     */
+    hover(showSmudgeOnHover: boolean, showCaptionOnHover: boolean): Smudge {
+        if (showSmudgeOnHover) {
+            this.element.classList.add("smudge-hover");
+        } else {
+            this.element.classList.remove("smudge-hover");
+        }
+
+        if (showCaptionOnHover) {
+            this.element.classList.add("smudge-hover-caption");
+        } else {
+            this.element.classList.remove("smudge-hover-caption");
+        }
+
         return this;
     }
 }
-
-window.onload = () => {
-    new Smudge("beach").slider();
-    new Smudge("ram").slider();
-    new Smudge("table").slider();
-    new Smudge("yellow").slider();
-};

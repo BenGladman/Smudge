@@ -11,9 +11,12 @@
 <body>
     <h1>Smudge</h1>
 
-    <div id="beach" data-src="ExampleImages/beach.jpg" style="width:800px; height:452px;"></div>
-    <div id="ram" data-src="ExampleImages/ram.jpg" style="width:800px; height:800px;"></div>
-    <div id="table" data-src="ExampleImages/table.jpg" style="width:800px; height:452px;"></div>
-    <div id="yellow" data-src="ExampleImages/yellow.jpg" style="width:800px; height: 452px;"></div>
+    <div id="shard" data-src="ExampleImages/shard.jpg" data-smudge="AgAAACRtbU2Rkm1ybZGSbQ==" style="width:800px; height:1415px;"></div>
+
+    <script>
+        window.onload = function () {
+            new Smudge("shard").hover(true).slider(1, 10);
+        };
+    </script>
 </body>
 </html>

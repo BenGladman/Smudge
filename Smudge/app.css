@@ -6,53 +6,70 @@
     position: relative;
 }
 
-.smudge-img {
+.smudge-image {
     left: 0;
     position: absolute;
-    top: 0;    
+    top: 0;
+}
+
+.smudge-image-loading .smudge-image {
+    visibility: hidden;
 }
 
 .smudge-canvas {
     left: 0;
-    opacity: 0;
     position: absolute;
     top: 0;
-    transition: opacity ease 1s;
+    transition: opacity ease 0.5s;
 }
 
-.smudge-info {
+.smudge-hover .smudge-canvas {
+    opacity: 0;
+}
+
+.smudge-hover:hover .smudge-canvas {
+    opacity: 1;
+}
+
+.smudge-image-loading .smudge-canvas {
+    opacity: 1;
+}
+
+.smudge-caption {
     background-color: rgba(255,255,255,0.5);
     bottom: 0;
     box-sizing: border-box;
     left: 0;
-    opacity: 0;
     padding: 5px 10px;
     position: absolute;
-    transition: opacity ease 1s;
     width: 100%;
     word-wrap: break-word;
+}
+
+.smudge-hover-caption .smudge-caption {
+    opacity: 0;
+    transition: opacity ease 1s;
+}
+
+.smudge-hover-caption:hover .smudge-caption {
+    opacity: 1;
 }
 
 .smudge-slider {
     box-sizing: border-box;
     left: 0;
-    opacity: 0;
     margin: 0;
     padding: 5px 10px;
     position: absolute;
-    transition: opacity ease 1s;
     top: 0;
     width: 100%;
 }
 
-.smudge-container:hover .smudge-canvas {
-    opacity: 1;
+.smudge-hover-caption .smudge-slider {
+    opacity: 0;
+    transition: opacity ease 1s;
 }
 
-.smudge-container:hover .smudge-info {
-    opacity: 1;
-}
-
-.smudge-container:hover .smudge-slider {
+.smudge-hover-caption:hover .smudge-slider {
     opacity: 1;
 }
