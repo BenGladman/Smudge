@@ -3,3 +3,5 @@
 .vs
 Smudge/bin
 Smudge/obj
+Smudge/*.js
+Smudge/*.js.map
