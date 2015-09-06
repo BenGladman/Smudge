@@ -28,6 +28,8 @@
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="Quantize.ts" />
+    <TypeScriptCompile Include="Quantize2.ts" />
     <TypeScriptCompile Include="Smudge.ts" />
     <TypeScriptCompile Include="SmudgeRenderer.ts" />
     <TypeScriptCompile Include="SmudgeData.ts" />
