@@ -5,18 +5,26 @@
     private element: HTMLElement;
     private image: HTMLImageElement;
     private data: SmudgeData;
-    private captionOnload: string;
+    
+    static messages = {
+        imageNotLoaded: "Image is not yet loaded.",
+        imageLoaded: "Image is now loaded.",
+        generate: "Slide to generate a smudge.",
+        generateWait: "Wait for the image to load, then slide to generate a smudge.",
+        idError: "No element with passed id.",
+        typeError: "Pass in an element or an id.",
+    };
 
     constructor(elementOrId: HTMLElement | string) {
         let element: HTMLElement;
 
         if (typeof elementOrId === "string") {
             element = document.getElementById(elementOrId);
-            if (!element) { throw new Error("No element with id " + elementOrId); }
+            if (!element) { throw new Error(Smudge.messages.idError); }
         } else if (elementOrId instanceof HTMLElement) {
             element = elementOrId;
         } else {
-            throw new TypeError("Pass in an element or and id");
+            throw new TypeError(Smudge.messages.typeError);
         }
 
         this.element = element;
@@ -25,22 +33,8 @@
 
         this.width = element.scrollWidth;
         this.height = element.scrollHeight;
-
-        let src = element.dataset["src"];
-        if (src) {
-            element.classList.add("smudge-image-loading");
-
-            let image = new Image(this.width, this.height);
-            image.src = src;
-            image.className = "smudge-image";
-            element.appendChild(image);
-            this.image = image;
-
-            image.onload = () => {
-                element.classList.remove("smudge-image-loading");
-                if (this.captionOnload) { this.caption(this.captionOnload); }
-            };
-        }
+        this.image = this.element.getElementsByTagName("img")[0];
+        this.checkImageLoaded();
 
         let canvas = document.createElement("canvas");
         canvas.width = this.width;
@@ -50,12 +44,69 @@
         element.appendChild(canvas);
 
         this.ctx = canvas.getContext("2d");
+    }
 
-        let b64 = element.dataset["smudge"];
-        if (b64) {
-            this.data = new SmudgeData(b64);
-            this.draw();
+    /**
+     * Check if the image is loaded. Set or unset the "loading" class. Set a caption based on the loaded status.
+     * @param loadedCaption The caption to display if the image has loaded.
+     * @param notLoadedCaption The caption to display if the image has not loaded.
+     * @param onloadCaption The caption to display after the image has loaded.
+     */
+    private checkImageLoaded(loadedCaption?: string, notLoadedCaption?: string, onloadCaption?: string): boolean {
+        if (!this.image) {
+            if (notLoadedCaption) { this.caption(notLoadedCaption); }
+            return false;
         }
+
+        if (this.image.complete) {
+            this.element.classList.remove("smudge-image-loading");
+            if (loadedCaption) { this.caption(loadedCaption); }
+            return true;
+        } else {
+            this.element.classList.add("smudge-image-loading");
+            if (notLoadedCaption) { this.caption(notLoadedCaption); }
+            this.image.onload = () => { this.checkImageLoaded(onloadCaption, notLoadedCaption, onloadCaption); }
+            return false;
+        }
+    }
+
+    /**
+     * Load the image.
+     * @param src Source URL for the image. Leave undefined to use the URL specified in the data-src attribute.
+     */
+    load(src?: string): Smudge {
+        if (!src) { src = this.element.dataset["src"]; }
+        if (!src) { return this; }
+
+        var image = this.image;
+
+        if (!image) {
+            image = new Image(this.width, this.height);
+            image.className = "smudge-image";
+            this.element.appendChild(image);
+            this.image = image;
+        }
+
+        if (src != image.src) {
+            image.src = src;
+            this.checkImageLoaded();
+        }
+
+        return this;
+    }
+
+    /**
+     * Set the smudge data.
+     * @param b64 Base64 representation of the smudge. Leave undefined to use the data specified in the data-smudge attribute.
+     */
+    smudge(b64?: string): Smudge {
+        if (!b64) { b64 = this.element.dataset["smudge"]; }
+        if (!b64) { return this; }
+
+        this.data = new SmudgeData(b64);
+        this.draw();
+
+        return this;
     }
 
     /**
@@ -95,13 +146,11 @@
     }
 
     /**
-     * Generate the smudge.
+     * Generate the smudge for the loaded image.
      * @param swidth Width of the smudge.
      */
     generate(swidth: number): Smudge {
-        if (!this.image.complete) {
-            this.caption("Image is not yet fully loaded.");
-            this.captionOnload = "Image is now fully loaded.";
+        if (!this.checkImageLoaded(null, Smudge.messages.imageNotLoaded, Smudge.messages.imageLoaded)) {
             return this;
         }
 
@@ -205,22 +254,19 @@
             sliderControl.className = "smudge-slider";
             sliderControl.type = "range";
             sliderControl.step = "1";
-            sliderControl.title = "Slide to generate a smudge.";
+            sliderControl.title = Smudge.messages.generate;
             this.element.appendChild(sliderControl);
 
             let oninput = () => {
-                let ssize = Number(sliderControl.value);
-                this.generate(ssize).draw();
-                if (this.data) { this.caption(this.toString()); }
+                if (this.checkImageLoaded(null, Smudge.messages.generateWait, Smudge.messages.generate)) {
+                    let ssize = Number(sliderControl.value);
+                    this.generate(ssize).draw();
+                    this.caption(this.toString());
+                }
             };
             sliderControl.oninput = oninput;
 
-            if (this.image.complete) {
-                this.caption("Slide to generate a smudge.");
-            } else {
-                this.caption("Wait for the image to load, then slide .to generate a smudge.");
-                this.captionOnload = "Slide to generate a smudge.";
-            }
+            this.checkImageLoaded(Smudge.messages.generate, Smudge.messages.generateWait, Smudge.messages.generate);
         }
 
         sliderControl.min = min ? min.toString() : "1";

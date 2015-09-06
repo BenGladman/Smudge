@@ -3,6 +3,7 @@
 }
 
 .smudge-container {
+    display: inline-block;
     position: relative;
 }
 
@@ -10,6 +11,7 @@
     left: 0;
     position: absolute;
     top: 0;
+    z-index: 1;
 }
 
 .smudge-image-loading .smudge-image {
@@ -21,6 +23,7 @@
     position: absolute;
     top: 0;
     transition: opacity ease 0.5s;
+    z-index: 2;
 }
 
 .smudge-hover .smudge-canvas {
@@ -44,6 +47,7 @@
     position: absolute;
     width: 100%;
     word-wrap: break-word;
+    z-index: 3;
 }
 
 .smudge-hover-caption .smudge-caption {
@@ -63,6 +67,7 @@
     position: absolute;
     top: 0;
     width: 100%;
+    z-index: 4;
 }
 
 .smudge-hover-caption .smudge-slider {

@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>TypeScript HTML App</title>
+    <title>Smudge</title>
     <link rel="stylesheet" href="smudge.css" type="text/css" />
     <script src="smudge.js"></script>
 </head>
@@ -11,12 +11,15 @@
 <body>
     <h1>Smudge</h1>
 
-    <div id="shard" data-src="ExampleImages/shard.jpg" data-smudge="AgAAACRtbU2Rkm1ybZGSbQ==" style="width:800px; height:1415px;"></div>
+    <div id="shard" data-smudge="AgAAACRtbU2Rkm1ybZGSbQ==">
+        <img src="ExampleImages/shard.jpg" alt="The Shard, London" width="800" height="1415">
+    </div>
+
+    <div id="shard2" style="width:800px; height:1415px;"></div>
 
     <script>
-        window.onload = function () {
-            new Smudge("shard").hover(true).slider(1, 10);
-        };
+        new Smudge("shard").smudge().hover(true).slider(1, 10);
+        new Smudge("shard2").load("ExampleImages/shard.jpg").smudge("ACRt").hover(true).slider(1, 10);
     </script>
 </body>
 </html>
