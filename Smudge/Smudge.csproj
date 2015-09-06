@@ -29,6 +29,7 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="Smudge.ts" />
+    <TypeScriptCompile Include="SmudgeRenderer.ts" />
     <TypeScriptCompile Include="SmudgeData.ts" />
   </ItemGroup>
   <ItemGroup>

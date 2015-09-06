@@ -18,8 +18,8 @@
     <div id="shard2" style="width:800px; height:1415px;"></div>
 
     <script>
-        new Smudge("shard").smudge().hover(true).slider(1, 10);
-        new Smudge("shard2").load("ExampleImages/shard.jpg").smudge("ACRt").hover(true).slider(1, 10);
+        Smudge.on("shard").draw().hover(true).slider(1, 10);
+        Smudge.on("shard2").load("ExampleImages/shard.jpg").smudge("ACRt").draw().hover(true).slider(1, 10);
     </script>
 </body>
 </html>
