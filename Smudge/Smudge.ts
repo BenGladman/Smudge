@@ -1,4 +1,4 @@
-﻿/// <reference path="SmudgeRenderer.ts" />
+﻿/// <reference path="Smudge.Renderer.ts" />
 
 namespace Smudge {
     export function on(elementOrId: HTMLElement | string): Renderer {

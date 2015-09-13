@@ -28,11 +28,11 @@
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="Quantize.ImageDataAdapter.ts" />
     <TypeScriptCompile Include="Quantize.ts" />
-    <TypeScriptCompile Include="Quantize2.ts" />
     <TypeScriptCompile Include="Smudge.ts" />
-    <TypeScriptCompile Include="SmudgeRenderer.ts" />
-    <TypeScriptCompile Include="SmudgeData.ts" />
+    <TypeScriptCompile Include="Smudge.Renderer.ts" />
+    <TypeScriptCompile Include="Smudge.Data.ts" />
   </ItemGroup>
   <ItemGroup>
     <None Include="web.Debug.config">

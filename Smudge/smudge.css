@@ -8,10 +8,7 @@
 }
 
 .smudge-image {
-    left: 0;
-    position: absolute;
-    top: 0;
-    z-index: 1;
+    float: left;
 }
 
 .smudge-image-loading .smudge-image {

@@ -6,6 +6,7 @@
     <title>Smudge</title>
     <link rel="stylesheet" href="smudge.css" type="text/css" />
     <script src="smudge.js"></script>
+    <script src="qjs.js"></script>
 </head>
 
 <body>
@@ -18,7 +19,7 @@
     <div id="shard2" style="width:800px; height:1415px;"></div>
 
     <script>
-        Smudge.on("shard").draw().hover(true).slider(1, 10);
+        Smudge.on("shard").draw().hover(true).slider(1, 10, true);
         Smudge.on("shard2").load("ExampleImages/shard.jpg").smudge("ACRt").draw().hover(true).slider(1, 10);
     </script>
 </body>

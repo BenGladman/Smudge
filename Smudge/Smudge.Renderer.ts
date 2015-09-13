@@ -1,6 +1,19 @@
-﻿/// <reference path="SmudgeData.ts" />
+﻿/// <reference path="Smudge.Data.ts" />
+/// <reference path="Quantize.ts" />
+/// <reference path="Quantize.ImageDataAdapter.ts" />
 
 namespace Smudge {
+    const messages = {
+        imageNotLoaded: "Image is not yet loaded.",
+        imageLoaded: "Image is now loaded.",
+        generate: "Slide to generate a smudge.",
+        generateWait: "Wait for the image to load, then slide to generate a smudge.",
+        idError: "No element with passed id.",
+        typeError: "Pass in an element or an id.",
+    };
+
+    type Colour = [number, number, number];
+
     export class Renderer {
         private ctx: CanvasRenderingContext2D;
         private width: number;
@@ -9,37 +22,29 @@ namespace Smudge {
         private image: HTMLImageElement;
         private data: Data;
 
-        static messages = {
-            imageNotLoaded: "Image is not yet loaded.",
-            imageLoaded: "Image is now loaded.",
-            generate: "Slide to generate a smudge.",
-            generateWait: "Wait for the image to load, then slide to generate a smudge.",
-            idError: "No element with passed id.",
-            typeError: "Pass in an element or an id.",
-        };
-
         constructor(elementOrId: HTMLElement | string) {
             let element: HTMLElement;
 
             if (typeof elementOrId === "string") {
                 element = document.getElementById(elementOrId);
-                if (!element) { throw new Error(Renderer.messages.idError); }
+                if (!element) { throw new Error(messages.idError); }
             } else if (elementOrId instanceof HTMLElement) {
                 element = elementOrId;
             } else {
-                throw new TypeError(Renderer.messages.typeError);
+                throw new TypeError(messages.typeError);
             }
 
             this.element = element;
 
             element.classList.add("smudge-container");
 
-            this.width = element.scrollWidth;
-            this.height = element.scrollHeight;
             this.image = this.element.getElementsByTagName("img")[0];
             this.checkImageLoaded();
 
-            let canvas = document.createElement("canvas");
+            this.width = element.scrollWidth;
+            this.height = element.scrollHeight;
+
+            const canvas = document.createElement("canvas");
             canvas.width = this.width;
             canvas.height = this.height;
             canvas.className = "smudge-canvas";
@@ -62,6 +67,8 @@ namespace Smudge {
                 if (notLoadedCaption) { this.caption(notLoadedCaption); }
                 return false;
             }
+
+            this.image.classList.add("smudge-image");
 
             if (this.image.complete) {
                 this.element.classList.remove("smudge-image-loading");
@@ -121,15 +128,16 @@ namespace Smudge {
                 return this;
             }
 
-            let previewData = this.data;
-            let previewWidth = previewData.width;
-            let previewHeight = previewData.height;
+            const previewData = this.data;
+            const previewWidth = previewData.width;
+            const previewHeight = previewData.height;
 
-            let ctx = this.ctx;
-            let imagedata = ctx.createImageData(previewWidth, previewHeight);
-            let previewIndex = 0;
-            for (let i = 0, data = imagedata.data, lendata = data.length; i < lendata;) {
-                let [r, g, b] = previewData.rgbAt(previewIndex++);
+            const ctx = this.ctx;
+            const imagedata = ctx.createImageData(previewWidth, previewHeight);
+            const data = imagedata.data;
+            const lendata = data.length;
+            for (let i = 0, previewIndex = 0; i < lendata;) {
+                const [r, g, b] = previewData.rgbAt(previewIndex++);
                 data[i++] = r;
                 data[i++] = g;
                 data[i++] = b;
@@ -153,26 +161,34 @@ namespace Smudge {
          * Generate the smudge for the loaded image.
          * @param swidth Width of the smudge.
          */
-        generate(swidth: number): Renderer {
-            if (!this.checkImageLoaded(null, Renderer.messages.imageNotLoaded, Renderer.messages.imageLoaded)) {
+        generate(swidth: number, quantize?: boolean): Renderer {
+            if (!this.checkImageLoaded(null, messages.imageNotLoaded, messages.imageLoaded)) {
                 return this;
             }
 
             swidth = Math.max(1, Math.floor(swidth));
-            let sheight = Math.max(1, Math.round(swidth * this.height / this.width));
-            let sdata = new Data(swidth);
+            const sheight = Math.max(1, Math.round(swidth * this.height / this.width));
+            const sdata = new Data(swidth, quantize);
 
             this.ctx.drawImage(this.image, 0, 0, this.width, this.height);
-            let imagedata = this.ctx.getImageData(0, 0, this.width, this.height);
-            let cellWidth = this.width / swidth;
-            let cellHeight = this.height / sheight;
+            const imagedata = this.ctx.getImageData(0, 0, this.width, this.height);
+            const cellWidth = this.width / swidth;
+            const cellHeight = this.height / sheight;
 
-            let data = imagedata.data;
+            if (quantize) {
+                const cmap = Quantize.quantize(new Quantize.ImageDataAdapter(imagedata), 16);
+                if (cmap) {
+                    sdata.setPalette(cmap.palette());
+                    sdata.colourMapper = (c) => cmap.nearestIndex(c);
+                }
+            }
+
+            const data = imagedata.data;
             for (let sy = 0; sy < sheight; sy++) {
                 for (let sx = 0; sx < swidth; sx++) {
-                    let imageIndex = (Math.floor(sx * cellWidth) + (Math.floor(sy * cellHeight) * this.width)) * 4;
-                    let [r, g, b] = this.calcAverageColour(data, imageIndex, cellWidth, cellHeight);
-                    sdata.appendRgb(r, g, b);
+                    const imageIndex = (Math.floor(sx * cellWidth) + (Math.floor(sy * cellHeight) * this.width)) * 4;
+                    const colour = this.calcAverageColour(data, imageIndex, cellWidth, cellHeight);
+                    sdata.appendRgb(colour);
                 }
             }
 
@@ -187,7 +203,7 @@ namespace Smudge {
          * @param cellWidth Width of the cell in pixels.
          * @param cellHeight Height of the cell in pixels.
          */
-        private calcAverageColour(data: number[], imageIndex1: number, cellWidth: number, cellHeight: number): [number, number, number] {
+        private calcAverageColour(data: number[], imageIndex1: number, cellWidth: number, cellHeight: number): Colour {
             let r = 0, g = 0, b = 0, count = 0;
 
             for (let j = 0; j < cellHeight; j++) {
@@ -239,26 +255,26 @@ namespace Smudge {
          * @param min The minimum value of the slider.
          * @param max The maximum value of the slider.
          */
-        slider(min?: number, max?: number): Renderer {
+        slider(min?: number, max?: number, quantize?: boolean): Renderer {
             let sliderControl = <HTMLInputElement> this.element.getElementsByClassName("smudge-slider")[0];
             if (!sliderControl) {
                 sliderControl = document.createElement("input");
                 sliderControl.className = "smudge-slider";
                 sliderControl.type = "range";
                 sliderControl.step = "1";
-                sliderControl.title = Renderer.messages.generate;
+                sliderControl.title = messages.generate;
                 this.element.appendChild(sliderControl);
 
-                let oninput = () => {
-                    if (this.checkImageLoaded(null, Renderer.messages.generateWait, Renderer.messages.generate)) {
-                        let ssize = Number(sliderControl.value);
-                        this.generate(ssize).draw();
+                const oninput = () => {
+                    if (this.checkImageLoaded(null, messages.generateWait, messages.generate)) {
+                        const ssize = Number(sliderControl.value);
+                        this.generate(ssize, quantize).draw();
                         this.caption(this.toString());
                     }
                 };
                 sliderControl.oninput = oninput;
 
-                this.checkImageLoaded(Renderer.messages.generate, Renderer.messages.generateWait, Renderer.messages.generate);
+                this.checkImageLoaded(messages.generate, messages.generateWait, messages.generate);
             }
 
             sliderControl.min = min ? min.toString() : "1";
