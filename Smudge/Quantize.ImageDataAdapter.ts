@@ -1,12 +1,12 @@
-﻿namespace Quantize {
-    type Colour = [number, number, number];
+﻿/// <reference path="Quantize.ts" />
 
+namespace Quantize {
     /**
      * Adapter class to allow canvas ImageData to be quantized.
      * Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
      * Ben Gladman 2015
      */
-    export class ImageDataAdapter {
+    export class ImageDataAdapter implements ColorArray {
         private pixelData: number[];
         private lendata: number;
         length: number;
@@ -17,10 +17,10 @@
             this.length = imageData.data.length >> 2;
         }
 
-        forEach(callbackfn: (pixel: Colour, index: number) => void) {
+        forEach(callbackfn: (pixel: Color, index: number) => void) {
             let pixelIndex = 0;
             for (let i = 0; i < this.lendata;) {
-                const pixel: Colour = [
+                const pixel: Color = [
                     this.pixelData[i++], // r
                     this.pixelData[i++], // g
                     this.pixelData[i++] // b

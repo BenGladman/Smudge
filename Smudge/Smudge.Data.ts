@@ -1,5 +1,5 @@
 ﻿namespace Smudge {
-    type Colour = [number, number, number];
+    export type Colour = [number, number, number];
 
     export class Data {
         width = 1;
@@ -110,8 +110,8 @@
 
         set base64(b64data: string) {
             const dd = window.atob(b64data);
-            const quantizedColors = [];
-            const data = [];
+            const quantizedColors: number[] = [];
+            const data: number[] = [];
 
             this.width = (dd.charCodeAt(0) & 127) + 1;
             this.quantized = !!(dd.charCodeAt(0) & 128)

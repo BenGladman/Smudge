@@ -1,6 +1,4 @@
-﻿/// <reference path="Quantize.ImageDataAdapter.ts" />
-
-/*! 
+﻿/*! 
  * quantize.js Copyright 2008 Nick Rabinowitz.
  * Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
  *
@@ -21,7 +19,7 @@ namespace Quantize {
                 ? array.map((d, i) => { o.index = i; return f.call(o, d); })
                 : array.slice();
         },
-        naturalOrder: (a, b) => {
+        naturalOrder: (a: number, b: number) => {
             return (a < b) ? -1 : ((a > b) ? 1 : 0);
         },
         sum: (array: any[], f?: Function) => {
@@ -65,17 +63,20 @@ namespace Quantize {
     const fractByPopulations = 0.75;
 
     // get reduced-space color index for a pixel
-    function getColorIndex(r, g, b) {
+    function getColorIndex(r: number, g: number, b: number) {
         return (r << (2 * sigbits)) + (g << sigbits) + b;
     }
+
+    type comparatorType<T> = (a: T, b: T) => number;
 
     // Simple priority queue
     class PQueue<T> {
         private contents: T[] = [];
         private sorted = false;
-        private comparator;
 
-        constructor(comparator: (a: T, b: T) => number) {
+        private comparator: comparatorType<T>;
+
+        constructor(comparator: comparatorType<T>) {
             this.comparator = comparator;
         }
 
@@ -115,10 +116,11 @@ namespace Quantize {
         }
     }
 
-    type Color = [number, number, number];
+    export type Color = [number, number, number];
 
     // 3d color space box
     class VBox {
+        [index: string]: any;
         r1: number;
         r2: number;
         g1: number;
@@ -137,7 +139,7 @@ namespace Quantize {
             this.histo = histo;
         }
 
-        private _volume;
+        private _volume: number;
 
         volume(force?: boolean) {
             const vbox = this;
@@ -147,15 +149,15 @@ namespace Quantize {
             return vbox._volume;
         }
 
-        private _count;
-        private _count_set;
+        private _count: number;
+        private _count_set: boolean;
 
         count(force?: boolean) {
             const vbox = this;
             const histo = vbox.histo;
 
             if (!vbox._count_set || force) {
-                let npix = 0, index;
+                let npix = 0, index: number;
                 for (let i = vbox.r1; i <= vbox.r2; i++) {
                     for (let j = vbox.g1; j <= vbox.g2; j++) {
                         for (let k = vbox.b1; k <= vbox.b2; k++) {
@@ -175,7 +177,7 @@ namespace Quantize {
             return new VBox(vbox.r1, vbox.r2, vbox.g1, vbox.g2, vbox.b1, vbox.b2, vbox.histo);
         }
 
-        private _avg;
+        private _avg: Color;
 
         avg(force?: boolean) {
             const vbox = this;
@@ -221,7 +223,11 @@ namespace Quantize {
         }
     }
 
-    type ColorArray = Color[] | ImageDataAdapter;
+    export interface ColorArray {
+        forEach: (callbackfn: (pixel: Color, index: number) => void) => void;
+        length: number;
+    }
+
     type VBoxColor = { vbox: VBox, color: Color };
 
     // Color map
@@ -233,7 +239,7 @@ namespace Quantize {
                 return pv.naturalOrder(
                     a.vbox.count() * a.vbox.volume(),
                     b.vbox.count() * b.vbox.volume()
-                    )
+                )
             });
         }
 
@@ -276,7 +282,7 @@ namespace Quantize {
                     Math.pow(color[0] - vboxes.peek(i).color[0], 2) +
                     Math.pow(color[1] - vboxes.peek(i).color[1], 2) +
                     Math.pow(color[2] - vboxes.peek(i).color[2], 2)
-                    );
+                );
                 if (d2 < d1 || d1 === undefined) {
                     d1 = d2;
                     pIndex = i;
@@ -390,20 +396,25 @@ namespace Quantize {
         function doCut(color: string) {
             let dim1 = color + '1';
             let dim2 = color + '2';
-            let left, right, vbox1, vbox2, d2, count2 = 0;
+            let left: number, right: number;
+            let vbox1: VBox, vbox2: VBox;
+            let d2: number, count2 = 0;
+
             for (let i = vbox[dim1]; i <= vbox[dim2]; i++) {
                 if (partialsum[i] > total / 2) {
                     vbox1 = vbox.copy();
                     vbox2 = vbox.copy();
                     left = i - vbox[dim1];
                     right = vbox[dim2] - i;
-                    if (left <= right)
+                    if (left <= right) {
                         d2 = Math.min(vbox[dim2] - 1, ~~(i + right / 2));
-                    else d2 = Math.max(vbox[dim1], ~~(i - 1 - left / 2));
+                    } else {
+                        d2 = Math.max(vbox[dim1], ~~(i - 1 - left / 2));
+                    }
                     // avoid 0-count boxes
-                    while (!partialsum[d2]) d2++;
+                    while (!partialsum[d2]) { d2++; }
                     count2 = lookaheadsum[d2];
-                    while (!count2 && partialsum[d2 - 1]) count2 = lookaheadsum[--d2];
+                    while (!count2 && partialsum[d2 - 1]) { count2 = lookaheadsum[--d2]; }
                     // set dimensions
                     vbox1[dim2] = d2;
                     vbox2[dim1] = vbox1[dim2] + 1;
@@ -444,7 +455,7 @@ namespace Quantize {
         pq.push(vbox);
         
         // inner function to do the iteration
-        function iter(lh, target) {
+        function iter(lh: PQueue<VBox>, target: number) {
             let ncolors = 1;
             let niters = 0;
 

@@ -12,8 +12,6 @@ namespace Smudge {
         typeError: "Pass in an element or an id.",
     };
 
-    type Colour = [number, number, number];
-
     export class Renderer {
         private ctx: CanvasRenderingContext2D;
         private width: number;
@@ -226,7 +224,7 @@ namespace Smudge {
          * @param text Text on the caption.
          */
         caption(text?: string): Renderer {
-            let infoDiv = <HTMLDivElement> this.element.getElementsByClassName("smudge-caption")[0];
+            let infoDiv = this.element.getElementsByClassName("smudge-caption")[0] as HTMLDivElement;
             if (text) {
                 if (!infoDiv) {
                     infoDiv = document.createElement("div");
