@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>TypeScript HTML App</title>
+    <title>Smudge</title>
     <link rel="stylesheet" href="smudge.css" type="text/css" />
     <script src="smudge.js"></script>
 </head>
@@ -11,12 +11,23 @@
 <body>
     <h1>Smudge</h1>
 
-    <div id="shard" data-src="ExampleImages/shard.jpg" data-smudge="AgAAACRtbU2Rkm1ybZGSbQ==" style="width:800px; height:1415px;"></div>
+    <div id="shard" data-smudge="hSmtKUmWto1JlmhEttYAcgDd3d3d3d3aMw3QPu6j7lRj42Rz7m4z4zNOTuROtOST4zY=">
+        <img src="ExampleImages/shard.jpg" alt="The Shard, London" width="800" height="1415" />
+    </div>
+
+    <div id="yellow" data-smudge="iW2s+W2wSdas0fT1ZIwk0AAe6ZmZ7u7pkenu7umXye4e7p28ThHum13HiKqovcQ=">
+        <img src="ExampleImages/yellow.jpg" alt="Art Gallery" width="800" height="452" />
+    </div>
+
+    <div id="table">
+        <img src="ExampleImages/table.jpg" alt="Tables" width="800" height="452" />
+    </div>
 
     <script>
-        window.onload = function () {
-            new Smudge("shard").hover(true).slider(1, 10);
-        };
+        Smudge.renderer("shard").draw().hover(true);
+        //Smudge.generator("shard").draw().hover(true).slider(1, 10, true);
+        Smudge.generator("yellow").draw().hover(true).slider(1, 10, true);
+        Smudge.quantizer("table").hover(true).slider();
     </script>
 </body>
 </html>
