@@ -6,33 +6,6 @@
  */
 
 namespace Quantize {
-    // fill out a couple protovis dependencies
-    /*!
-     * Block below copied from Protovis: http://mbostock.github.com/protovis/
-     * Copyright 2010 Stanford Visualization Group
-     * Licensed under the BSD License: http://www.opensource.org/licenses/bsd-license.php
-     */
-    const pv = {
-        map: (array: any[], f?: Function) => {
-            const o = { index: 0 };
-            return f
-                ? array.map((d, i) => { o.index = i; return f.call(o, d); })
-                : array.slice();
-        },
-        naturalOrder: (a: number, b: number) => {
-            return (a < b) ? -1 : ((a > b) ? 1 : 0);
-        },
-        sum: (array: any[], f?: Function) => {
-            const o = { index: 0 };
-            return array.reduce(f
-                ? (p, d, i) => { o.index = i; return p + f.call(o, d); }
-                : (p, d) => { return p + d; }, 0);
-        },
-        max: (array: any[], f?: Function) => {
-            return Math.max.apply(null, f ? pv.map(array, f) : array);
-        }
-    }
- 
     /**
      * Basic Javascript port of the MMCQ (modified median cut quantization)
      * algorithm from the Leptonica library (http://www.leptonica.com/).
@@ -65,6 +38,10 @@ namespace Quantize {
     // get reduced-space color index for a pixel
     function getColorIndex(r: number, g: number, b: number) {
         return (r << (2 * sigbits)) + (g << sigbits) + b;
+    }
+
+    function naturalOrder(a: number, b: number) {
+        return (a < b) ? -1 : ((a > b) ? 1 : 0);
     }
 
     type comparatorType<T> = (a: T, b: T) => number;
@@ -223,9 +200,16 @@ namespace Quantize {
         }
     }
 
+    /**
+     * ColorArray interface is compatible with an array of [r,g,b] arrays.
+     */
     export interface ColorArray {
         forEach: (callbackfn: (pixel: Color, index: number) => void) => void;
         length: number;
+    }
+
+    function testColorArrayInterface() {
+        const test: ColorArray = new Array<Color>();
     }
 
     type VBoxColor = { vbox: VBox, color: Color };
@@ -236,7 +220,7 @@ namespace Quantize {
 
         constructor() {
             this.vboxes = new PQueue<VBoxColor>((a, b) => {
-                return pv.naturalOrder(
+                return naturalOrder(
                     a.vbox.count() * a.vbox.volume(),
                     b.vbox.count() * b.vbox.volume()
                 )
@@ -343,7 +327,7 @@ namespace Quantize {
         const rw = vbox.r2 - vbox.r1 + 1;
         const gw = vbox.g2 - vbox.g1 + 1;
         const bw = vbox.b2 - vbox.b1 + 1;
-        const maxw = pv.max([rw, gw, bw]);
+        const maxw = Math.max(rw, gw, bw);
 
         /* Find the partial sum arrays along the selected axis. */
         let total = 0,
@@ -451,7 +435,7 @@ namespace Quantize {
         
         // get the beginning vbox from the colors
         const vbox = vboxFromPixels(pixels, histo);
-        const pq = new PQueue<VBox>((a, b) => { return pv.naturalOrder(a.count(), b.count()) });
+        const pq = new PQueue<VBox>((a, b) => { return naturalOrder(a.count(), b.count()) });
         pq.push(vbox);
         
         // inner function to do the iteration
@@ -495,7 +479,7 @@ namespace Quantize {
         
         // Re-sort by the product of pixel occupancy times the size in color space.
         const pq2 = new PQueue<VBox>((a, b) => {
-            return pv.naturalOrder(a.count() * a.volume(), b.count() * b.volume())
+            return naturalOrder(a.count() * a.volume(), b.count() * b.volume())
         });
         while (pq.size()) {
             pq2.push(pq.pop());

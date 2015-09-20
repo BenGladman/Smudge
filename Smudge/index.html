@@ -18,8 +18,9 @@
     <div id="shard2" style="width:800px; height:1415px;"></div>
 
     <script>
-        Smudge.on("shard").draw().hover(true).slider(1, 10, true);
-        Smudge.on("shard2").load("ExampleImages/shard.jpg").smudge("ACRt").draw().hover(true).slider(1, 10);
+        //Smudge.generator("shard").draw().hover(true).slider(1, 10, true);
+        Smudge.renderer("shard").draw().caption("The Shard");
+        Smudge.generator("shard2").load("ExampleImages/shard.jpg").smudge("AgAAACRtbU2Rkm1ybZGSbQ==").draw().hover(true).slider(1, 15, true);
     </script>
 </body>
 </html>

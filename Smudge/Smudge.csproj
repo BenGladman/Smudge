@@ -30,6 +30,8 @@
   <ItemGroup>
     <TypeScriptCompile Include="Quantize.ImageDataAdapter.ts" />
     <TypeScriptCompile Include="Quantize.ts" />
+    <TypeScriptCompile Include="Smudge.Generator.ts" />
+    <TypeScriptCompile Include="Smudge.Quantizer.ts" />
     <TypeScriptCompile Include="Smudge.ts" />
     <TypeScriptCompile Include="Smudge.Renderer.ts" />
     <TypeScriptCompile Include="Smudge.Data.ts" />

@@ -1,24 +1,20 @@
 ﻿/// <reference path="Smudge.Data.ts" />
-/// <reference path="Quantize.ts" />
-/// <reference path="Quantize.ImageDataAdapter.ts" />
 
 namespace Smudge {
     const messages = {
-        imageNotLoaded: "Image is not yet loaded.",
-        imageLoaded: "Image is now loaded.",
-        generate: "Slide to generate a smudge.",
-        generateWait: "Wait for the image to load, then slide to generate a smudge.",
         idError: "No element with passed id.",
         typeError: "Pass in an element or an id.",
+        imageNotLoaded: "Image is not yet loaded.",
+        imageLoaded: "Image is now loaded.",
     };
 
     export class Renderer {
-        private ctx: CanvasRenderingContext2D;
-        private width: number;
-        private height: number;
-        private element: HTMLElement;
-        private image: HTMLImageElement;
-        private data: Data;
+        protected element: HTMLElement;
+        protected ctx: CanvasRenderingContext2D;
+        protected width: number;
+        protected height: number;
+        protected image: HTMLImageElement;
+        protected data: Data;
 
         constructor(elementOrId: HTMLElement | string) {
             let element: HTMLElement;
@@ -60,7 +56,7 @@ namespace Smudge {
          * @param notLoadedCaption The caption to display if the image has not loaded.
          * @param onloadCaption The caption to display after the image has loaded.
          */
-        private checkImageLoaded(loadedCaption?: string, notLoadedCaption?: string, onloadCaption?: string): boolean {
+        protected checkImageLoaded(loadedCaption?: string, notLoadedCaption: string = messages.imageNotLoaded, onloadCaption: string = messages.imageLoaded): boolean {
             if (!this.image) {
                 if (notLoadedCaption) { this.caption(notLoadedCaption); }
                 return false;
@@ -69,11 +65,11 @@ namespace Smudge {
             this.image.classList.add("smudge-image");
 
             if (this.image.complete) {
-                this.element.classList.remove("smudge-image-loading");
+                this.element.classList.add("smudge-image-loaded");
                 if (loadedCaption) { this.caption(loadedCaption); }
                 return true;
             } else {
-                this.element.classList.add("smudge-image-loading");
+                this.element.classList.remove("smudge-image-loaded");
                 if (notLoadedCaption) { this.caption(notLoadedCaption); }
                 this.image.onload = () => { this.checkImageLoaded(onloadCaption, notLoadedCaption, onloadCaption); }
                 return false;
@@ -84,7 +80,7 @@ namespace Smudge {
          * Load the image.
          * @param src Source URL for the image. Leave undefined to use the URL specified in the data-src attribute.
          */
-        load(src?: string): Renderer {
+        load(src?: string) {
             if (!src) { src = this.element.dataset["src"]; }
             if (!src) { return this; }
 
@@ -109,7 +105,7 @@ namespace Smudge {
          * Set the smudge data.
          * @param b64 Base64 representation of the smudge. Leave undefined to use the data specified in the data-smudge attribute.
          */
-        smudge(b64?: string): Renderer {
+        smudge(b64?: string) {
             if (!b64) { b64 = this.element.dataset["smudge"]; }
             if (!b64) { return this; }
 
@@ -121,7 +117,7 @@ namespace Smudge {
         /**
          * Draw the smudge.
          */
-        draw(): Renderer {
+        draw() {
             if (!this.data) {
                 return this;
             }
@@ -148,82 +144,10 @@ namespace Smudge {
         }
 
         /**
-         * Calculate the smudge width for a given total size.
-         * @param ssize The total size of the smudge.
-         */
-        private calcWidthForSize(ssize: number): number {
-            return Math.sqrt(ssize * this.width / this.height);
-        }
-
-        /**
-         * Generate the smudge for the loaded image.
-         * @param swidth Width of the smudge.
-         */
-        generate(swidth: number, quantize?: boolean): Renderer {
-            if (!this.checkImageLoaded(null, messages.imageNotLoaded, messages.imageLoaded)) {
-                return this;
-            }
-
-            swidth = Math.max(1, Math.floor(swidth));
-            const sheight = Math.max(1, Math.round(swidth * this.height / this.width));
-            const sdata = new Data(swidth, quantize);
-
-            this.ctx.drawImage(this.image, 0, 0, this.width, this.height);
-            const imagedata = this.ctx.getImageData(0, 0, this.width, this.height);
-            const cellWidth = this.width / swidth;
-            const cellHeight = this.height / sheight;
-
-            if (quantize) {
-                const cmap = Quantize.quantize(new Quantize.ImageDataAdapter(imagedata), 16);
-                if (cmap) {
-                    sdata.setPalette(cmap.palette());
-                    sdata.colourMapper = (c) => cmap.nearestIndex(c);
-                }
-            }
-
-            const data = imagedata.data;
-            for (let sy = 0; sy < sheight; sy++) {
-                for (let sx = 0; sx < swidth; sx++) {
-                    const imageIndex = (Math.floor(sx * cellWidth) + (Math.floor(sy * cellHeight) * this.width)) * 4;
-                    const colour = this.calcAverageColour(data, imageIndex, cellWidth, cellHeight);
-                    sdata.appendRgb(colour);
-                }
-            }
-
-            this.data = sdata;
-            return this;
-        }
-
-        /**
-         * Calculate the average colour of a cell.
-         * @param data Pixel data.
-         * @param imageIndex1 Index in data of the first pixel in the cell.
-         * @param cellWidth Width of the cell in pixels.
-         * @param cellHeight Height of the cell in pixels.
-         */
-        private calcAverageColour(data: number[], imageIndex1: number, cellWidth: number, cellHeight: number): Colour {
-            let r = 0, g = 0, b = 0, count = 0;
-
-            for (let j = 0; j < cellHeight; j++) {
-                let imageIndex = imageIndex1 + (j * this.width * 4);
-
-                for (let i = 0; i < cellWidth; i++) {
-                    count++;
-                    r += data[imageIndex++];
-                    g += data[imageIndex++];
-                    b += data[imageIndex++];
-                    imageIndex++;
-                }
-            }
-
-            return [(r / count), (g / count), (b / count)];
-        }
-
-        /**
          * Set the caption text.
          * @param text Text on the caption.
          */
-        caption(text?: string): Renderer {
+        caption(text?: string) {
             let infoDiv = this.element.getElementsByClassName("smudge-caption")[0] as HTMLDivElement;
             if (text) {
                 if (!infoDiv) {
@@ -246,40 +170,6 @@ namespace Smudge {
                 `Smudge(width=${this.data.width}, height=${this.data.height}, length=${this.data.base64.length}, base64=${this.data.base64})`
                 :
                 "Smudge(empty)";
-        }
-
-        /**
-         * Add a slider control to allow the user the generate a smudge.
-         * @param min The minimum value of the slider.
-         * @param max The maximum value of the slider.
-         */
-        slider(min?: number, max?: number, quantize?: boolean): Renderer {
-            let sliderControl = <HTMLInputElement> this.element.getElementsByClassName("smudge-slider")[0];
-            if (!sliderControl) {
-                sliderControl = document.createElement("input");
-                sliderControl.className = "smudge-slider";
-                sliderControl.type = "range";
-                sliderControl.step = "1";
-                sliderControl.title = messages.generate;
-                this.element.appendChild(sliderControl);
-
-                const oninput = () => {
-                    if (this.checkImageLoaded(null, messages.generateWait, messages.generate)) {
-                        const ssize = Number(sliderControl.value);
-                        this.generate(ssize, quantize).draw();
-                        this.caption(this.toString());
-                    }
-                };
-                sliderControl.oninput = oninput;
-
-                this.checkImageLoaded(messages.generate, messages.generateWait, messages.generate);
-            }
-
-            sliderControl.min = min ? min.toString() : "1";
-            sliderControl.max = max ? max.toString() : "10";
-            sliderControl.value = this.data ? this.data.width.toString() : "0";
-
-            return this;
         }
 
         /**

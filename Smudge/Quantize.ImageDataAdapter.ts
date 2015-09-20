@@ -29,5 +29,27 @@ namespace Quantize {
                 callbackfn(pixel, pixelIndex++);
             }
         }
+
+        /**
+         * Apply a function to each pixel.
+         */
+        apply(callbackfn: (pixel: Color, index: number) => Color) {
+            let pixelIndex = 0;
+            for (let i = 0; i < this.lendata;) {
+                const pixelIn: Color = [
+                    this.pixelData[i], // r
+                    this.pixelData[i+1], // g
+                    this.pixelData[i+2] // b
+                ];
+
+                const pixelOut = callbackfn(pixelIn, pixelIndex++);
+
+                this.pixelData[i++] = pixelOut[0]; // r
+                this.pixelData[i++] = pixelOut[1]; // g
+                this.pixelData[i++] = pixelOut[2]; // b
+                i++; // a
+            }
+        }
+
     }
 }
