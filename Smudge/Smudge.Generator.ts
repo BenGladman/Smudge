@@ -5,6 +5,8 @@
 
 namespace Smudge {
     const messages = {
+        imageNotLoaded: "Image is not yet loaded.",
+        imageLoaded: "Image is now loaded.",
         slide: "Slide to generate a smudge.",
         wait: "Wait for the image to load, then slide to generate a smudge.",
     };
@@ -23,7 +25,7 @@ namespace Smudge {
          * @param swidth Width of the smudge.
          */
         generate(swidth: number, quantize?: boolean): Generator {
-            if (!this.checkImageLoaded()) {
+            if (!this.checkImageLoaded(null, messages.imageNotLoaded, messages.imageLoaded)) {
                 return this;
             }
 

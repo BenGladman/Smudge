@@ -4,6 +4,8 @@
 
 namespace Smudge {
     const messages = {
+        imageNotLoaded: "Image is not yet loaded.",
+        imageLoaded: "Image is now loaded.",
         quantize: "Slide to quantize.",
         wait: "Wait for the image to load, then slide to quantize.",
     };
@@ -12,7 +14,7 @@ namespace Smudge {
         private maxcolours: number = 0;
 
         quantize(maxcolours: number): Quantizer {
-            if (!this.checkImageLoaded()) {
+            if (!this.checkImageLoaded(null, messages.imageNotLoaded, messages.imageLoaded)) {
                 return this;
             }
 

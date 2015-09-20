@@ -4,8 +4,6 @@ namespace Smudge {
     const messages = {
         idError: "No element with passed id.",
         typeError: "Pass in an element or an id.",
-        imageNotLoaded: "Image is not yet loaded.",
-        imageLoaded: "Image is now loaded.",
     };
 
     export class Renderer {
@@ -56,7 +54,7 @@ namespace Smudge {
          * @param notLoadedCaption The caption to display if the image has not loaded.
          * @param onloadCaption The caption to display after the image has loaded.
          */
-        protected checkImageLoaded(loadedCaption?: string, notLoadedCaption: string = messages.imageNotLoaded, onloadCaption: string = messages.imageLoaded): boolean {
+        protected checkImageLoaded(loadedCaption?: string, notLoadedCaption?: string, onloadCaption?: string): boolean {
             if (!this.image) {
                 if (notLoadedCaption) { this.caption(notLoadedCaption); }
                 return false;
