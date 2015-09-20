@@ -10,10 +10,10 @@
         constructor(widthOrBase64?: number | string, quantized?: boolean) {
             if (typeof widthOrBase64 === "number") {
                 this.width = widthOrBase64;
+                this.quantized = quantized;
             } else if (typeof widthOrBase64 === "string") {
                 this.base64 = widthOrBase64;
             }
-            this.quantized = quantized;
         }
 
         /**
