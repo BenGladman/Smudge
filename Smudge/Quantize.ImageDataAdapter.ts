@@ -1,4 +1,5 @@
 ﻿/// <reference path="Quantize.ts" />
+/// <reference path="Quantize.CommonTypes.ts" />
 
 namespace Quantize {
     /**

@@ -28,8 +28,12 @@
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="Quantize.CMap.ts" />
+    <TypeScriptCompile Include="Quantize.CommonTypes.ts" />
     <TypeScriptCompile Include="Quantize.ImageDataAdapter.ts" />
+    <TypeScriptCompile Include="Quantize.PQueue.ts" />
     <TypeScriptCompile Include="Quantize.ts" />
+    <TypeScriptCompile Include="Quantize.VBox.ts" />
     <TypeScriptCompile Include="Smudge.Generator.ts" />
     <TypeScriptCompile Include="Smudge.Quantizer.ts" />
     <TypeScriptCompile Include="Smudge.ts" />

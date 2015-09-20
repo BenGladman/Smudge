@@ -51,7 +51,7 @@ namespace Smudge {
                 const oninput = () => {
                     if (this.checkImageLoaded(null, messages.wait, messages.quantize)) {
                         this.maxcolours = Number(sliderControl.value);
-                        this.quantize(this.maxcolours).draw();
+                        this.quantize(this.maxcolours);
                         this.caption(this.toString());
                     }
                 };
