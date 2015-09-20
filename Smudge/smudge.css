@@ -9,29 +9,27 @@
 
 .smudge-image {
     float: left;
+    visibility: hidden;
 }
 
-.smudge-image-loading .smudge-image {
-    visibility: hidden;
+.smudge-image-loaded .smudge-image {
+    visibility: visible;
 }
 
 .smudge-canvas {
     left: 0;
+    opacity: 1;
     position: absolute;
     top: 0;
     transition: opacity ease 0.5s;
     z-index: 2;
 }
 
-.smudge-hover .smudge-canvas {
+.smudge-image-loaded .smudge-canvas {
     opacity: 0;
 }
 
 .smudge-hover:hover .smudge-canvas {
-    opacity: 1;
-}
-
-.smudge-image-loading .smudge-canvas {
     opacity: 1;
 }
 
